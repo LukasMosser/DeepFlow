@@ -2,8 +2,8 @@ import numpy as np
 import torch
 import random
 
-from networks.generator import PermeabilityGeneratorMRST as PermeabilityGenerator
-from networks.networks import GeneratorMultiChannel
+from deepflow.generator import PermeabilityGeneratorMRST as PermeabilityGenerator
+from deepflow.networks import GeneratorMultiChannel
 
 def set_seed(seed):
     random.seed(seed)

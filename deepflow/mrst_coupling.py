@@ -22,6 +22,7 @@ def load_production_data(fname, name='ws_ref'):
     return np.array(well_props)
 
 def load_gradients(fname):
+    print(fname)
     grad = io.loadmat(fname)
     grad_pore = grad['sens']['porevolume'][0, 0].reshape(64, 128)
     grad_permx = grad['sens']['permx'][0, 0].reshape(64, 128)
@@ -49,7 +50,6 @@ class PytorchMRSTCoupler(torch.autograd.Function):
 
             grad_perm_torch = torch.from_numpy(perm_sens.T).unsqueeze(0).unsqueeze(0)
             grad_poro_torch = torch.from_numpy(poro_sens.T).unsqueeze(0).unsqueeze(0)
-            
 
             func = io.loadmat(os.path.join(args['matlab_path'], 'utils/synthetic/misfit.mat'))['misfitVal'][0, 0]
 

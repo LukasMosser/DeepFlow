@@ -8,12 +8,12 @@ import numpy as np
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 
-from networks.generator import PermeabilityGeneratorMRST as PermeabilityGenerator
-from networks.networks import GeneratorMultiChannel
-from networks.optimizers import MALA
-from mrst_coupling import PytorchMRSTCoupler, load_production_data, load_gradients
-from storage import create_dataset
-from utils import set_seed, load_generator, report_latent_vector_stats
+from deepflow.generator import PermeabilityGeneratorMRST as PermeabilityGenerator
+from deepflow.networks import GeneratorMultiChannel
+from deepflow.optimizers import MALA
+from deepflow.mrst_coupling import PytorchMRSTCoupler, load_production_data, load_gradients
+from deepflow.storage import create_dataset
+from deepflow.utils import set_seed, load_generator, report_latent_vector_stats
 
 import time
 import random 
