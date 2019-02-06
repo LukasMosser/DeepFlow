@@ -1,3 +1,6 @@
+#local directories
+runs/*
+mrst/mrst-2018a/examples/data/SPE10/spe_perm.dat
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
