@@ -14,6 +14,7 @@ python run_deepflow.py --working_dir ./ \
 --iterations 500 \
 --weight_decay 0.1 \
 --optimize_wells \
+--optimize_flow \
 --early_stopping \
 --target_accuracy 0.9 \
 --seed "$i"
