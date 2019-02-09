@@ -1,8 +1,8 @@
-END=100;
+END=0;
 for i in $(seq 0 $END)
 do 
 python run_deepflow.py --working_dir ./ \
---output_dir runs/test_deepflow_both \
+--output_dir runs/test_deepflow_mala \
 --matlab_dir mrst/mrst-2018a/modules/optimization/examples/model2Dtest \
 --mrst_dir mrst/mrst-2018a \
 --checkpoints_dir checkpoints \
@@ -12,10 +12,9 @@ python run_deepflow.py --working_dir ./ \
 --beta2 0.999 \
 --lr 1e-1 \
 --iterations 500 \
---weight_decay 0.1 \
---optimize_wells \
---optimize_flow \
+--weight_decay 0.0 \
 --early_stopping \
---target_accuracy 0.9 \
+--target_accuracy 1.0 \
+--use_prior_loss \
 --seed "$i"
 done

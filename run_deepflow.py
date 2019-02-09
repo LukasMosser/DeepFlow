@@ -34,14 +34,17 @@ def parse_args(argv):
     parser.add_argument("--lr", type=float, default=1e-1, help="Learning Rate")   
     parser.add_argument("--seed", type=int, default=0, help="Random Seed") 
     parser.add_argument("--weight_decay", type=float, default=0.1, help="Momentum first parameter") 
-    parser.add_argument("--beta1", type=float, default=0.5, help="Momentum first parameter") 
-    parser.add_argument("--beta2", type=float, default=0.9, help="Momentum second parameter") 
+    parser.add_argument("--beta1", type=float, default=0.9, help="Momentum first parameter") 
+    parser.add_argument("--beta2", type=float, default=0.999, help="Momentum second parameter") 
     parser.add_argument("--iterations", type=int, default=200, help="Number of gradient steps")
     parser.add_argument("--optimize_wells", action="store_true", help="Match wells")
     parser.add_argument("--optimize_flow", action="store_true", help="Match flow behavior")
+    parser.add_argument("--use_prior_loss", action="store_true", help="Regularize latent variables to be Gaussian. Same as weight decay but uses pytorch distributions. Set Weight Decay to 0!")
+    parser.add_argument("--unconditional", action="store_true", help="Do only one forward pass")
     parser.add_argument('--well_locations', nargs='+', type=int, default=[8, 120])
     parser.add_argument("--early_stopping", action="store_true", help="Stop early (only used for well only optimisation)")
-    parser.add_argument("--target_accuracy", type=float, default=0.9, help="Early stopping criterion for well only optimisation")
+    parser.add_argument("--target_accuracy", type=float, default=1.0, help="Early stopping criterion for well only optimisation")
+    parser.add_argument("--gamma", type=float, default=0.99, help="Learning-Rate Scheduler Gamma") 
     args = parser.parse_args(argv)
     return args
 
@@ -49,7 +52,7 @@ def compute_well_loss(i, x, x_gt, well_locations):
     x_prob = x[0, well_locations, :].view(1, 1, len(well_locations), 64)
     x_gt_indicator = x_gt[0, well_locations, :].view(1, 1, len(well_locations), 64)
 
-    loss_f = nn.BCELoss(reduction='mean')
+    loss_f = nn.BCELoss()
     
     loss = loss_f(x_prob, x_gt_indicator)
     acc = accuracy_score(
@@ -58,7 +61,13 @@ def compute_well_loss(i, x, x_gt, well_locations):
                         )
     return loss, acc
 
-def optimize(args, z, generator, optimizer):
+def compute_prior_loss(z, alpha=1.):
+    pdf = torch.distributions.Normal(0, 1)
+    logProb = pdf.log_prob(z).mean(dim=1)
+    prior_loss = -alpha*logProb.mean()
+    return prior_loss
+
+def optimize(args, z, generator, optimizer, stepper):
     working_dir = os.path.expandvars(args.working_dir)
     output_path = os.path.expandvars(args.output_dir)
     matlab_path = os.path.join(working_dir, args.matlab_dir)
@@ -66,6 +75,7 @@ def optimize(args, z, generator, optimizer):
 
     well_loss = torch.from_numpy(np.array([-999.]))
     flow_loss = torch.from_numpy(np.array([-999.]))
+    prior_loss = torch.from_numpy(np.array([-999.]))
     well_acc = -999.
 
     matlab_command =  ["matlab", "-nodisplay", "-nosplash", "-nodesktop", "-r"]
@@ -96,17 +106,28 @@ def optimize(args, z, generator, optimizer):
             print("Well BCE Loss: %2.3f" % well_loss.item(), "Wells BCE Accuracy: %1.2f" % well_acc)
             report_latent_vector_stats(i, z, "well loss")
 
-        if args.optimize_flow or (args.optimize_wells and well_acc >= args.target_accuracy):
+        if args.use_prior_loss:
+            prior_loss = compute_prior_loss(z, alpha=1.)
+            prior_loss.backward()
+            print("Prior Loss: ", prior_loss.item())
+            report_latent_vector_stats(i, z, "prior loss")  
+
+        if args.optimize_flow or (args.optimize_wells and (well_acc >= args.target_accuracy and args.early_stopping)) or args.unconditional:
             coupler = PytorchMRSTCoupler()
             layer = coupler.apply
 
             flow_loss = layer(k, poro, external_commands).float()
-            flow_loss.backward()
+            flow_loss.backward(retain_graph=True)
             print("Flow Loss: ", flow_loss.item())
             report_latent_vector_stats(i, z, "flow loss")
-        
-        optimizer.step()
-        report_latent_vector_stats(i, z, "optimizer step")
+   
+        if not args.unconditional:
+            optimizer.step()
+            if args.optimizer == "mala":
+                stepper.step()
+                for param_group in optimizer.param_groups:
+                    print("Current step_size: %1.5f" % param_group['lr'])
+            report_latent_vector_stats(i, z, "optimizer step")
 
         grads = load_gradients(grad_name)
         syn_data = load_production_data(syn_fname, "ws")
@@ -119,10 +140,12 @@ def optimize(args, z, generator, optimizer):
 
         ds.to_netcdf(os.path.join(output_path, "iteration_"+str(i)+".nc"))
         print("Stored Iteration Output")
-        if args.optimize_wells:
+        if args.optimize_wells and not args.optimize_flow:
             if well_acc >= args.target_accuracy and args.early_stopping:
                 print("Early Stopping on iteration: ", i)
                 break
+        if args.unconditional:
+            break
         print("")
 
     return None
@@ -138,16 +161,18 @@ def main(args):
     z = torch.randn(1, 50, 1, 2)
     z.requires_grad = True
 
+    stepper = None
     if args.optimizer == "sgd":
         optimizer = SGD([z], lr=args.lr, momentum=args.beta1, weight_decay=args.weight_decay)
     elif args.optimizer =="mala":
         optimizer = MALA([z], lr=args.lr, weight_decay=args.weight_decay)
+        stepper = ExponentialLR(optimizer, gamma=args.gamma)
     elif args.optimizer =="rmsprop":
         optimizer = RMSprop([z], lr=args.lr, momentum=args.beta1, weight_decay=args.weight_decay)
     elif args.optimizer == "adam":
         optimizer = Adam([z], lr=args.lr, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay)
 
-    states = optimize(args, z, generator, optimizer)
+    states = optimize(args, z, generator, optimizer, stepper=stepper)
 
 if __name__ == '__main__':
     args = parse_args(sys.argv[1:])
