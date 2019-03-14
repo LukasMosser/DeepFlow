@@ -207,9 +207,9 @@ def plot_misfit_histograms(axarr, misfits):
         mode = stats.mode(theshs_non_nan)[0]
         mean = np.mean(theshs_non_nan)
 
-        ax.axvline(mode, linestyle="-", color="black", label="Mode: "+str(int(mode[0]))+" (N="+str(non_nan)+")")
-        ax.axvline(mean, linestyle="--", color="red", label="Mean: "+str(int(np.ceil(mean))))
-        ax.hist(theshs_non_nan, histtype="step", color="black", linestyle="-", lw=4, label=r'Histogram $\mathcal{L}(\mathbf{z})='+str(e[0])+r'\times 10^{'+str(e[1])+'}$')
+        #ax.axvline(mode, linestyle="-", color="black", label="Mode: "+str(int(mode[0]))+" (N="+str(non_nan)+")")
+        ax.axvline(mean, linestyle="--", color="red", label="Mean: "+str(int(np.ceil(mean)))+" (N="+str(non_nan)+")")
+        ax.hist(theshs_non_nan, histtype="step", color="black", linestyle="-", lw=4, label=r'Histogram $\mathcal{L}_{flow}(\mathbf{z})='+str(e[0])+r'\times 10^{'+str(e[1])+'}$')
         ax.legend(fontsize=18, loc=1)
 
         ax.set_xlim(0, 500)
@@ -218,7 +218,7 @@ def plot_misfit_histograms(axarr, misfits):
 
     for ax in axarr:
         handles, labels = ax.get_legend_handles_labels()
-        order = [2,0,1]
+        order = [1,0]
         ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order], fontsize=16)
 
     axarr[0].set_ylabel("Number of Models", fontsize=18)
