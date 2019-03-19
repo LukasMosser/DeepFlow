@@ -1,4 +1,4 @@
-END=0;
+END=100;
 for i in $(seq 0 $END)
 do 
 python run_deepflow.py --working_dir ./ \
@@ -13,6 +13,7 @@ python run_deepflow.py --working_dir ./ \
 --lr 1e-1 \
 --iterations 500 \
 --weight_decay 0.0 \
+--optimize_wells \
 --early_stopping \
 --target_accuracy 1.0 \
 --use_prior_loss \
