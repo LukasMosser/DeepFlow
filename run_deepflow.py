@@ -48,13 +48,13 @@ def parse_args(argv):
     args = parser.parse_args(argv)
     return args
 
-def compute_well_loss(i, x, x_gt, well_locations):
+def compute_well_loss(i, x, x_gt, well_locations, alpha=1.):
     x_prob = x[0, well_locations, :].view(1, 1, len(well_locations), 64)
     x_gt_indicator = x_gt[0, well_locations, :].view(1, 1, len(well_locations), 64)
 
     loss_f = nn.BCELoss()
     
-    loss = loss_f(x_prob, x_gt_indicator)
+    loss = alpha*loss_f(x_prob, x_gt_indicator)
     acc = accuracy_score(
                         x_gt_indicator.cpu().detach().numpy().astype(int).flatten(),
                         np.where(x_prob.cpu().detach().numpy().flatten() > 0.5, 1, 0)
@@ -63,11 +63,13 @@ def compute_well_loss(i, x, x_gt, well_locations):
 
 def compute_prior_loss(z, alpha=1.):
     pdf = torch.distributions.Normal(0, 1)
-    logProb = pdf.log_prob(z).mean(dim=1)
+    logProb = pdf.log_prob(z.view(1, 100)).mean(dim=1)
     prior_loss = -alpha*logProb.mean()
     return prior_loss
 
 def optimize(args, z, generator, optimizer, stepper):
+    z_prior = z.clone()
+
     working_dir = os.path.expandvars(args.working_dir)
     output_path = os.path.expandvars(args.output_dir)
     matlab_path = os.path.join(working_dir, args.matlab_dir)
@@ -83,7 +85,7 @@ def optimize(args, z, generator, optimizer, stepper):
 
     external_commands = {"command": matlab_command, "call": fcall, "matlab_path": matlab_path}
 
-    ref_fname = os.path.join(matlab_path, "utils/vertcase3/ws_ref.mat")
+    ref_fname = os.path.join(matlab_path, "utils/vertcase3_noise/ws_ref.mat")
     syn_fname = os.path.join(matlab_path, "utils/synthetic/ws.mat")
 
     grad_name = os.path.join(matlab_path, "utils/synthetic/grad.mat")
@@ -101,7 +103,7 @@ def optimize(args, z, generator, optimizer, stepper):
         well_loss, well_acc = compute_well_loss(i, x, x_gt, args.well_locations)
         
         if args.optimize_wells:
-            well_loss.backward(retain_graph=True)
+            well_loss.backward(retain_graph=True, alpha=1.)
             nn.utils.clip_grad_norm_(z, 5.0)
             print("Well BCE Loss: %2.3f" % well_loss.item(), "Wells BCE Accuracy: %1.2f" % well_acc)
             report_latent_vector_stats(i, z, "well loss")
@@ -123,27 +125,27 @@ def optimize(args, z, generator, optimizer, stepper):
    
         if not args.unconditional:
             optimizer.step()
-            if args.optimizer == "mala":
-                stepper.step()
-                for param_group in optimizer.param_groups:
-                    print("Current step_size: %1.5f" % param_group['lr'])
             report_latent_vector_stats(i, z, "optimizer step")
 
         grads = load_gradients(grad_name)
         syn_data = load_production_data(syn_fname, "ws")
         ds = create_dataset(syn_data, 
-                                np.array([poro.detach().numpy()[0, 0].T, k.detach().numpy()[0, 0].T]), 
-                                grads, 
-                                z.view(1, 50, 2, 1).detach().numpy(),
-                                z.grad.view(1, 50, 2, 1).numpy(),
-                                np.array([[flow_loss.item(), well_loss.item(), well_acc]]))
+                            np.array([poro.detach().numpy()[0, 0].T, k.detach().numpy()[0, 0].T]), 
+                            grads, 
+                            z.view(1, 50, 2, 1).detach().numpy(),
+                            z_prior.view(1, 50, 2, 1).detach().numpy(),
+                            z.grad.view(1, 50, 2, 1).numpy(),
+                            np.array([[flow_loss.item(), well_loss.item(), well_acc, prior_loss.item()]]))
 
         ds.to_netcdf(os.path.join(output_path, "iteration_"+str(i)+".nc"))
         print("Stored Iteration Output")
-        if args.optimize_wells and not args.optimize_flow:
+        
+        #Early stopping only supported for wells
+        if args.early_stopping:
             if well_acc >= args.target_accuracy and args.early_stopping:
                 print("Early Stopping on iteration: ", i)
                 break
+        
         if args.unconditional:
             break
         print("")
@@ -164,9 +166,6 @@ def main(args):
     stepper = None
     if args.optimizer == "sgd":
         optimizer = SGD([z], lr=args.lr, momentum=args.beta1, weight_decay=args.weight_decay)
-    elif args.optimizer =="mala":
-        optimizer = MALA([z], lr=args.lr, weight_decay=args.weight_decay)
-        stepper = ExponentialLR(optimizer, gamma=args.gamma)
     elif args.optimizer =="rmsprop":
         optimizer = RMSprop([z], lr=args.lr, momentum=args.beta1, weight_decay=args.weight_decay)
     elif args.optimizer == "adam":

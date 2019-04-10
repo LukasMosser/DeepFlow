@@ -8,7 +8,7 @@ def to_deltas(dt):
         dts.append(dts[i-1]+dt[i])
     return np.array(dts)
 
-def create_dataset(prod_data, material_props, material_grads, latent_vars, grad_latent_vars, misfit_vals):
+def create_dataset(prod_data, material_props, material_grads, latent_vars, prior_latent_vars, grad_latent_vars, misfit_vals):
     dt_1 = to_deltas([1, 1, 3, 5, 5, 10, 10, 10, 15, 15, 15, 15, 15, 15, 15])
     dt_2 = 150+to_deltas(np.array([15]*10))
     dt_3 = 300+to_deltas([25]*6)
@@ -48,6 +48,14 @@ def create_dataset(prod_data, material_props, material_grads, latent_vars, grad_
     latent_variables = xr.DataArray(data, coords=[properties, variable_indices, n_grid_block_indices, m_grid_block_indices], dims=['latent_variable', 'z', 'nx', 'ny'])
     #print(latent_variables)
 
+    data = prior_latent_vars
+    properties = ['z_prior']
+    variable_indices = range(50)
+    n_grid_block_indices = range(2)
+    m_grid_block_indices = range(1)
+    prior_latent_variables = xr.DataArray(data, coords=[properties, variable_indices, n_grid_block_indices, m_grid_block_indices], dims=['latent_variable', 'z', 'nx', 'ny'])
+ 
+
     data = grad_latent_vars
     properties = ['dJdz']
     variable_indices = range(50)
@@ -58,14 +66,17 @@ def create_dataset(prod_data, material_props, material_grads, latent_vars, grad_
     
     data = misfit_vals
     properties = ['dJ']
-    misfit_indices = range(3)
+    misfit_indices = range(4)
     misfit_values = xr.DataArray(data, coords=[properties, misfit_indices], dims=['functional', 'i'])
     #print(latent_variables)
 
-    iteration_ds = xr.Dataset({'state_variables': state_variables, 'material_properties': material_properties,
-                           'material_derivatives': material_derivatives, 'latent_variables': latent_variables,
+    iteration_ds = xr.Dataset({'state_variables': state_variables, 
+                           'material_properties': material_properties,
+                           'material_derivatives': material_derivatives, 
+                           'latent_variables': latent_variables,
+                           'prior_latent_variables':prior_latent_variables,
                            'latent_variable_derivatives': grad_latent_variables,
-                              'misfit_value': misfit_values})
+                           'misfit_value': misfit_values})
     return iteration_ds
 
 
