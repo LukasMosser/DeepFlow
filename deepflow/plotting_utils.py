@@ -120,7 +120,53 @@ def plot_colored_rate_curves(axarr, min_curves, iterations_to_show, ref_curves, 
 
     return True
     
+def plot_colored_rate_curves_loss(axarr, min_curves, losses, iterations_to_show, min_iteration, ref_curves, dts, method="-Adam", color="blue", alpha=0.1, ref_color="red", cmap="coolwarm"):  
+        
+    selected_curves = min_curves[iterations_to_show]
+    losses = np.log10(losses[iterations_to_show])
+    jet = cm = plt.get_cmap(cmap) 
+    log_total = losses
+    cNorm  = colors.Normalize(vmin=np.min(log_total), vmax=np.max(log_total))
+    scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=jet)
+    cs = [scalarMap.to_rgba(j) for j in log_total]
 
+    for j, (curves, idx) in enumerate(zip(selected_curves, iterations_to_show)):
+
+        if j == len(selected_curves)-1:
+            for k in range(3):
+                axarr[k].plot(dts, curves[k], color=cs[j], alpha=0.5, label="Simulated") 
+        else:
+            for k in range(3):
+                cbar_handle = axarr[k].plot(dts, curves[k], color=cs[j], alpha=0.5)   
+    
+
+    for k in range(3):
+        axarr[k].plot(dts, selected_curves[0][k], color='green', linewidth=4, linestyle="-.", alpha=1.0, label="Initial")     
+        
+    for k in range(3):
+        axarr[k].plot(dts, min_curves[min_iteration, k, :][0], color='black', alpha=1.0, linewidth=4, linestyle="--", label=r"Minimum $\mathcal{L}(\mathbf{z})$")  
+                
+    for i, t, loc  in zip(range(3), ["Oil Rate [m3/d]", "Water Rate [m3/d]", "Pressure [Bar]"], [0, 1, 1]):
+        axarr[i].scatter(dts, ref_curves[i], color=ref_color, marker="x", s=60, label="Observed", zorder=100)
+        axarr[i].set_ylabel(t, fontsize=16)
+        axarr[i].legend(fontsize=20, loc=loc)
+
+    for a in axarr:
+        a.set_xlabel("Time [days]", fontsize=16)
+    
+    axarr[0].set_ylim(-5, 325)
+    axarr[1].set_ylim(-5, 325)
+    axarr[2].set_yscale("log")
+    axarr[2].set_ylim(150, 100000)
+
+    scalarMap._A = []
+    plt.colorbar(scalarMap)
+    for a, label, left, up in zip(axarr.flatten(), ["a)", "b)", "c)"], [-30]*3, [330, 330, 1.15e5]*3):
+        a.text(left, up, label, fontsize=22)    
+
+    axarr[2].text(800, 2e4, r"Total Loss $\log[\mathcal{L}(\mathbf{z})]$", rotation=90, fontsize=24)
+
+    return True
 
 def plot_rate_curves(axarr, min_curves, ref_curves, dts, method="-Adam", color="blue", alpha=0.05, ref_color="red"):
     for j, curves in enumerate(min_curves):
@@ -231,11 +277,11 @@ def extract_min_misfits(misfits, pos):
     mins = np.array([(i, np.argmin(x[:, pos], axis=0), x[np.argmin(x[:, pos], axis=0), pos]) for i, x in enumerate(misfits) if len(x) != 0])
     return mins
 
-def load_folders(working_dir, folders, functional="min_f"):
+def load_folders(working_dir, folders, functionals=["min_f", "min_f", "min_f"]):
     temp = []
     temp_poroperms = []
     temp_zs = []
-    for folder in folders:
+    for folder, functional in zip(folders, functionals):
         min_f_curves = np.load(os.path.join(working_dir, folder, functional+"_curves.npy"))
         min_f_poroperms = np.load(os.path.join(working_dir, folder, functional+"_poroperms.npy"))
         min_f_zs = np.load(os.path.join(working_dir, folder, functional+"_zs.npy"))
@@ -279,7 +325,7 @@ def mean_confidence_interval(data, confidence=0.95):
     a = 1.0 * np.array(data)
     n = data.shape[0]
     m, se = np.mean(a, axis=0), scipy.stats.sem(a, axis=0)
-    h = 2*np.std(a, axis=0)#se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
+    h = np.std(a, axis=0)#se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
     return m, m-h, m+h
 
 def determine_connected(facies, dilation=False):

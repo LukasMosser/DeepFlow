@@ -1,9 +1,25 @@
 import numpy as np
+from torch.optim.optimizer import Optimizer, required
 import torch
 import random
 
 from deepflow.generator import PermeabilityGeneratorMRST as PermeabilityGenerator
 from deepflow.networks import GeneratorMultiChannel
+
+def print_header():
+    print("""\
+       /$$$$$$$                                /$$$$$$$$ /$$                        
+      | $$__  $$                              | $$_____/| $$                        
+      | $$  \ $$  /$$$$$$   /$$$$$$   /$$$$$$ | $$      | $$  /$$$$$$  /$$  /$$  /$$
+      | $$  | $$ /$$__  $$ /$$__  $$ /$$__  $$| $$$$$   | $$ /$$__  $$| $$ | $$ | $$
+      | $$  | $$| $$$$$$$$| $$$$$$$$| $$  \ $$| $$__/   | $$| $$  \ $$| $$ | $$ | $$
+      | $$  | $$| $$_____/| $$_____/| $$  | $$| $$      | $$| $$  | $$| $$ | $$ | $$
+      | $$$$$$$/|  $$$$$$$|  $$$$$$$| $$$$$$$/| $$      | $$|  $$$$$$/|  $$$$$/$$$$/
+      |_______/  \_______/ \_______/| $$____/ |__/      |__/ \______/  \_____/\___/ 
+                                    | $$                                            
+                                    | $$                                            
+                                    |__/                                            
+    """)
 
 def set_seed(seed):
     random.seed(seed)

@@ -18,7 +18,7 @@ fluid = initSimpleScaledADIFluid('mu',    [.3, 5, 0]*centi*poise, ...
                                  
                        
 % Create model-object of class TwoPhaseOilWaterModel  
-model_ref  = load('utils/vertcase3/model_ref.mat');%                   
+model_ref  = load('utils/vertcase3_noise/model_ref.mat');%                   
 model_ref = model_ref.model_ref;
 
 % Set initial state and run simulation:
@@ -30,13 +30,13 @@ rock1 = gethalfcircle();
 model = TwoPhaseOilWaterModel(G, rock1, fluid);
 
 % load ref model
-ws_ref = load('utils/vertcase3/ws_ref.mat');
+ws_ref = load('utils/vertcase3_noise/ws_ref.mat');
 ws_ref = ws_ref.ws_ref;
 
-states_ref = load('utils/vertcase3/states_ref.mat');
+states_ref = load('utils/vertcase3_noise/states_ref.mat');
 states_ref = states_ref.states_ref;
 
-r_ref = load('utils/vertcase3/r_ref.mat');
+r_ref = load('utils/vertcase3_noise/r_ref.mat');
 r_ref = r_ref.r_ref;
 
 % run model
