@@ -3,6 +3,8 @@ clear all;
 LASTN = maxNumCompThreads(4);
 mrstModule add ad-core ad-blackoil ad-props optimization spe10 mrst-gui
 
+inputArg = getenv('case_name');  
+
 % Setup model -> grid, rock, schedule, fluid etc
 nxyz = [128, 64, 1];
 Dxyz = [128*4, 64*4, 10];
@@ -75,7 +77,7 @@ fluid = initSimpleScaledADIFluid('mu',    [.3, 5, 0]*centi*poise, ...
                                  
                        
 % Create model-object of class TwoPhaseOilWaterModel  
-model_ref  = load('utils/vertcase3_noise/model_ref.mat');%                   
+model_ref  = load(join(['utils/', inputArg, '/model_ref.mat']));%                   
 model_ref = model_ref.model_ref;
 
 % Set initial state and run simulation:
@@ -87,44 +89,16 @@ rock1 = gethalfcircle();
 model = TwoPhaseOilWaterModel(G, rock1, fluid);
 
 % load ref model
-ws_ref = load('utils/vertcase3_noise/ws_ref.mat');
+ws_ref = load(join(['utils/', inputArg, '/ws_ref.mat']));
 ws_ref = ws_ref.ws_ref;
 
-states_ref = load('utils/vertcase3_noise/states_ref.mat');
+states_ref = load(join(['utils/', inputArg, '/states_ref.mat']));
 states_ref = states_ref.states_ref;
 
-r_ref = load('utils/vertcase3_noise/r_ref.mat');
+r_ref = load(join(['utils/', inputArg, '/r_ref.mat']));
 r_ref = r_ref.r_ref;
 
 % run model
 [ws, states, r] = simulateScheduleAD(state0, model, schedule);
 
-%% setup misfit-function and run adjoint to get parameter sensitivities
-% setup weights for matching function, empty weight uses default (will 
-% produce function value of ~O(1) for 100% misfit). Only match rates in this example: 
-weighting =  {'WaterRateWeight',     [], ...
-              'OilRateWeight',       [] , ...
-              'BHPWeight',           []};
-   
-% compute misfit function value (first each summand corresonding to each time-step)
-misfitVals = matchObservedOW(G, ws, schedule, ws_ref, weighting{:});
-
-% sum values to obtiain scalar objective 
-misfitVal = sum(vertcat(misfitVals{:}));
-fprintf('Current misfit value: %6.4e\n', misfitVal)
-
-% setup (per time step) mismatch function handle for passing on to adjoint sim
-objh = @(tstep)matchObservedOW(G, ws, schedule, ws_ref, 'computePartials', true, 'tstep', tstep, weighting{:});
-
-% run adjoint to compute sensitivities of misfit wrt params
-% choose parameters, get multiplier sensitivities except for endpoints
-params      = {'porevolume', 'permeability'};
-paramTypes  = {'multiplier', 'multiplier'};
-
-%sens = computeSensitivitiesAdjointAD(state0, states, model, schedule, objh, ...
-%                                     'Parameters'    , params, ...
-%                                     'ParameterTypes', paramTypes);
-
-%save('utils/synthetic/grad.mat', 'sens');
-%save('utils/synthetic/misfit.mat', 'misfitVal');
 save('utils/synthetic/ws.mat', 'ws');

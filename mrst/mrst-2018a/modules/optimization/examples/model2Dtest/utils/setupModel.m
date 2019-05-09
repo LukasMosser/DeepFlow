@@ -47,13 +47,16 @@ for k  = 1:1
 end
 
 % Set up 4 control-steps each 150 days
-ts = { [1 1 3 5 5 10 10 10 15 15 15 15]'*day};
+ts = { [1 1 3 5 5 10 10 10 15 15 15 15 15 15 15]'*day, ...
+        repmat(150/10, 10, 1)*day, ...
+        repmat(150/6, 6, 1)*day, ...
+        repmat(150/6, 6, 1)*day};
 
        
 numCnt = numel(ts);
 
 [schedule.control(1:numCnt).W] = deal(W);
-schedule.step.control = rldecode((1:1)', cellfun(@numel, ts));
+schedule.step.control = rldecode((1:4)', cellfun(@numel, ts));
 schedule.step.val     = vertcat(ts{:});
 
 gravity off

@@ -14,6 +14,7 @@ python run_deepflow.py --working_dir ./ \
 --iterations 500 \
 --weight_decay 0.0 \
 --use_prior_loss \
+--run_forecast \
 --optimize_flow \
 --seed "$i"
 done

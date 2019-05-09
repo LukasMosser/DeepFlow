@@ -14,6 +14,7 @@ from deepflow.optimizers import MALA, pSGLD, pSGLDmod
 from deepflow.mrst_coupling import PytorchMRSTCoupler, load_production_data, load_gradients
 from deepflow.storage import create_dataset
 from deepflow.utils import set_seed, load_generator, report_latent_vector_stats, print_header
+from deepflow.losses import compute_prior_loss, compute_well_loss, compute_prior_loss_kl_divergence
 
 import time
 import random 
@@ -54,48 +55,13 @@ def parse_args(argv):
     parser.add_argument('--well_locations', nargs='+', type=int, default=[8, 120])
     parser.add_argument("--early_stopping", action="store_true", help="Stop early (only used for well only optimisation)")
     parser.add_argument("--wells_only", action="store_true", help="Optimize wells only.")
+    parser.add_argument("--run_forecast", action="store_true", help="Run a forecast")
     parser.add_argument("--target_accuracy", type=float, default=1.0, help="Early stopping criterion for well only optimisation")
     parser.add_argument("--gamma", type=float, default=0.99, help="Learning-Rate Scheduler Gamma") 
     logger.info('Parsing CMD Line Arguments')
     args = parser.parse_args(argv)
     logger.info('Completed Parsing CMD Line Arguments')
     return args
-
-def compute_well_loss(i, x, x_gt, well_locations, alpha=1.):
-    x_prob = x[0, well_locations, :].view(1, 1, len(well_locations), 64)
-    x_gt_indicator = x_gt[0, well_locations, :].view(1, 1, len(well_locations), 64)
-
-    loss_f = nn.BCELoss(reduction="sum")
-    
-    loss = alpha*loss_f(x_prob, x_gt_indicator)
-    acc = accuracy_score(
-                        x_gt_indicator.cpu().detach().numpy().astype(int).flatten(),
-                        np.where(x_prob.cpu().detach().numpy().flatten() > 0.5, 1, 0)
-                        )
-    return loss, acc
-
-def compute_prior_loss_kl_divergence(z, alpha=1.):
-    z_dist = torch.randn_like(z.view(1, 100))
-    z_dist_mean = z_dist.mean()
-    z_dist_std = z_dist.std()
-
-    z_mean = z.mean()
-    z_std = z.std()
-    
-    z1m = z_mean
-    z2m = z_dist_mean
-    
-    z1s = z_std
-    z2s = z_dist_std
-    
-    prior_loss = alpha*torch.log(z2s/z1s)+(z1s**2+(z1m-z2m)**2)/(2*z2s**2)-0.5
-    return prior_loss
-
-def compute_prior_loss(z, alpha=1.):
-    pdf = torch.distributions.Normal(0, 1)
-    logProb = pdf.log_prob(z.view(1, 100)).mean(dim=1)
-    prior_loss = -alpha*logProb.mean()
-    return prior_loss
 
 def optimize(args, z, generator, optimizer, stepper):
     z_prior = z.clone()
@@ -110,6 +76,9 @@ def optimize(args, z, generator, optimizer, stepper):
     flow_loss = torch.from_numpy(np.array([-999.]))
     prior_loss = torch.from_numpy(np.array([-999.]))
     well_acc = -999.
+
+    case_name = "vertcase3_noise"
+    os.environ["case_name"] = case_name
 
     matlab_command =  ["matlab", "-nodisplay", "-nosplash", "-nodesktop", "-r"]
     fcall = ['run("'+os.path.join(mrst_path, "startup.m")+'"), run("'+os.path.join(matlab_path, "run_adjoint.m")+'"), exit']
@@ -179,10 +148,11 @@ def optimize(args, z, generator, optimizer, stepper):
             grads = load_gradients(grad_name)
             syn_data = load_production_data(syn_fname, "ws")
             
-            logger.info('Simulate Full Production History')
-            flow_loss_full = layer(k, poro, external_commands_full).float()
-            syn_data_full = load_production_data(syn_fname, "ws")
-            logger.info('Completed Flow Loss')
+            if args.run_forecast:
+                logger.info('Simulate Full Production History')
+                flow_loss_full = layer(k, poro, external_commands_full).float()
+                syn_data_full = load_production_data(syn_fname, "ws")
+                logger.info('Completed Flow Loss')
    
         if not args.unconditional:
             logger.info('Performing Gradient Descent')
@@ -239,9 +209,8 @@ def main(args):
         optimizer = RMSprop([z], lr=args.lr, momentum=args.beta1, weight_decay=args.weight_decay)
     elif args.optimizer == "adam":
         optimizer = Adam([z], lr=args.lr, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay)
-    elif args.optimizer == "psgld":
-        optimizer = pSGLDmod([z], lr=args.lr) #betas=(args.beta1, args.beta2), , weight_decay=args.weight_decay
     elif args.optimizer == "mala":
+        # Not supported
         optimizer = MALA(params=[z], lr=args.lr, weight_decay=args.weight_decay, eps3=args.weight_decay)
         stepper = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.999)
     

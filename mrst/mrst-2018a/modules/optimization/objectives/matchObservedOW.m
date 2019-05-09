@@ -62,19 +62,24 @@ for step = 1:numSteps
     else
         matchCases = true(nw,1);
     end
+    %display(class(qWs_obs));
+    %display(class(qWs));
+    [ww, wo, wp] = getWeights_noise(qWs_obs, qOs_obs, bhp_obs, opt);
     
-    [ww, wo, wp] = getWeights(qWs_obs, qOs_obs, bhp_obs, opt);
-                                   
      if opt.ComputePartials
          [~, ~, qWs, qOs, bhp] = ...
            initVariablesADI(p, sW, qWs, qOs, bhp);                    
      end
-
+    
     dt = dts(step);
+    %display(class(qWs_obs));
+    %display(class(qWs));
+    %display(class(qOs_obs));
+    %display(class(qOs));
     obj{step} = (dt/(totTime*nnz(matchCases)^2))*sum( ...
-                                (ww.*matchCases.*(qWs-qWs_obs)).^2 + ...
-                                (wo.*matchCases.*(qOs-qOs_obs)).^2 + ...
-                                (wp.*matchCases.*(bhp-bhp_obs)).^2 );
+                                (ww.*matchCases.*(qWs-double(qWs_obs))).^2 + ...
+                                (wo.*matchCases.*(qOs-double(qOs_obs))).^2 + ...
+                                (wp.*matchCases.*(bhp-double(bhp_obs))).^2 );
 end
 end
 
@@ -135,4 +140,46 @@ if isempty(wp)
     end
 end
 end
+
+function  [ww, wo, wp] = getWeights_noise(qWs, qOs, bhp, opt)
+    ww = opt.WaterRateWeight;
+    wo = opt.OilRateWeight;
+    wp = opt.BHPWeight;
+    
+    %rw = sum(abs(qWs)+abs(qOs));
+    %display(class(rw));
+    rw = double(0.03*300.0/(60.0*60.0*24.0));%sum(abs(qWs)+abs(qOs));
+    %display(class(rw));
+    if isempty(ww)
+        % set to zero if all are zero
+        if sum(abs(qWs))==0
+            ww = 0;
+        else
+            ww = 1.0/rw;
+        end
+    end
+    
+    if isempty(wo)
+        % set to zero if all are zero
+        if sum(abs(qOs))==0
+            wo = 0;
+        else
+            wo = 1.0/rw;
+        end
+    end
+    
+    if isempty(wp)
+        % set to zero all are same
+        %dp = max(bhp)-min(bhp);
+        %display(class(dp));
+        dp =  double(0.0001*200.0e7);
+        %display(class(dp));
+        if dp == 0
+            wp = 0;
+        else
+            wp = 1.0/dp;
+        end
+    end
+    end
+
 

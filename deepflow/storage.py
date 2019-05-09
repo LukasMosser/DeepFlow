@@ -8,17 +8,17 @@ def to_deltas(dt):
         dts.append(dts[i-1]+dt[i])
     return np.array(dts)
 
-def create_dataset(prod_data, prod_data_full, material_props, material_grads, latent_vars, prior_latent_vars, grad_latent_vars, misfit_vals):
-    dt_1 = to_deltas([1, 1, 3, 5, 5, 10, 10, 10, 15, 15, 15, 15])
-    dt_1_full = to_deltas([1, 1, 3, 5, 5, 10, 10, 10, 15, 15, 15, 15, 15, 15, 15])
+def create_dataset(prod_data, prod_data_forecast, material_props, material_grads, latent_vars, prior_latent_vars, grad_latent_vars, misfit_vals):
+    
+    dt_1 = to_deltas([1, 1, 3, 5, 5, 10, 10, 10, 15, 15, 15, 15, 15, 15, 15])
     dt_2 = 150+to_deltas(np.array([15]*10))
     dt_3 = 300+to_deltas([25]*6)
     dt_4 = 450+to_deltas([25]*6)
-    dts = np.concatenate([dt_1])
-    dts_full = np.concatenate([dt_1_full, dt_2, dt_3, dt_4])
 
-    control = pd.TimedeltaIndex(pd.to_timedelta(dts, unit='d'))
-    control_full = pd.TimedeltaIndex(pd.to_timedelta(dts_full, unit='d'))
+    dts_forecast = np.concatenate([dt_1, dt_2, dt_3, dt_4])
+
+    control = pd.TimedeltaIndex(pd.to_timedelta(dts_forecast, unit='d'))
+    control_forecast = pd.TimedeltaIndex(pd.to_timedelta(dts_forecast, unit='d'))
 
     t0 = pd.Timestamp('20190101')
 
@@ -29,11 +29,11 @@ def create_dataset(prod_data, prod_data_full, material_props, material_grads, la
     state_variables = xr.DataArray(data, coords=[locs, states, times], dims=['well', 'state_variable', 'time'])
     #print(state_variables)
 
-    data = prod_data_full
+    data = prod_data_forecast
     locs = ['Injector', 'Producer']
     states = ['pressure', 'oil-rate', 'water-rate', 'water-cut']
-    times_full = control_full+t0
-    state_variables_full = xr.DataArray(data, coords=[locs, states, times_full], dims=['well', 'state_variable', 'time'])
+    times_full = control_forecast+t0
+    state_variables_forecast = xr.DataArray(data, coords=[locs, states, times_full], dims=['well', 'state_variable', 'time'])
     #print(state_variables)
 
     data = material_props
@@ -80,7 +80,7 @@ def create_dataset(prod_data, prod_data_full, material_props, material_grads, la
     misfit_values = xr.DataArray(data, coords=[properties, misfit_indices], dims=['functional', 'i'])
     #print(latent_variables)
 
-    iteration_ds = xr.Dataset({'state_variables': state_variables, 'state_variables_full': state_variables_full,
+    iteration_ds = xr.Dataset({'state_variables': state_variables, 'state_variables_full': state_variables_forecast,
                            'material_properties': material_properties,
                            'material_derivatives': material_derivatives, 
                            'latent_variables': latent_variables,

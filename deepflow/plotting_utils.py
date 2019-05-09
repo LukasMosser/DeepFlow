@@ -304,7 +304,7 @@ def get_unconditionals(working_dir, perm, N=1000):
     misfits = []
     for i in range(0, N):
         try:
-            folder = os.path.join(working_dir, perm, 'unconditional_noise/run_'+str(i))
+            folder = os.path.join(working_dir, perm, 'unconditional_bce/run_'+str(i))
             ds = xr.open_dataset(folder+'/iteration_0.nc')
             qo = ds['state_variables'][dict(state_variable=2, well=1)]*(-60*60*24)
             qw = ds['state_variables'][dict(state_variable=1, well=1)]*(-60*60*24)
@@ -342,18 +342,13 @@ def determine_connected(facies, dilation=False):
     return False
 
 def plot_misfit_histograms(axarr, misfits):
-    qo_error = pd.DataFrame([m[:, 0] for m in misfits])
-    qw_error = pd.DataFrame([m[:, 1] for m in misfits])
-    p_error = pd.DataFrame([m[:, 2] for m in misfits])
-    f_error = pd.DataFrame([m[:, 3] for m in misfits])
-    well_acc = pd.DataFrame([m[:, 4] for m in misfits])
     t_error = pd.DataFrame([m[:, -1] for m in misfits])
 
     threshs = []
-    error_threshs = [1e4, 1e3, 1e2, 1e1, 1e0]
+    error_threshs = [1e3, 1e2, 1e1, 1e0, 1e0]
     for t in error_threshs:
         temp = []
-        for row in f_error.values:
+        for row in t_error.values:
             minim = [np.NaN, np.NaN]
             for i, value in enumerate(row):
                 if value <= t:
@@ -363,7 +358,7 @@ def plot_misfit_histograms(axarr, misfits):
         threshs.append(temp)
     threshs = np.array(threshs)
 
-    for idx_thresh, ax, e, m in zip(range(1, 4), axarr, [[1, 3], [1, 2], [1, 1]], [100, 100, 500]):
+    for idx_thresh, ax, e, m in zip(range(0, 3), axarr, [[1, 3], [1, 2], [1, 1]], [100, 100, 500]):
         non_nan = np.sum(~np.isnan(threshs[idx_thresh, :, 0]))
         theshs_non_nan = threshs[idx_thresh, :, 0][~np.isnan(threshs[idx_thresh, :, 0])]
         mode = stats.mode(theshs_non_nan)[0]
@@ -383,5 +378,5 @@ def plot_misfit_histograms(axarr, misfits):
         ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order], fontsize=20)
 
     axarr[0].set_ylabel("Number of Models", fontsize=20)
-    for ax, label in zip(axarr, ["a)", "b)", "c)"]):
-        ax.text(0, 102, label, fontsize=18)
+    #for ax, label in zip(axarr, ["a)", "b)", "c)"]):
+    #    ax.text(0, 102, label, fontsize=18)

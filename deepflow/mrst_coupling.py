@@ -5,7 +5,6 @@ import subprocess as proc
 import matplotlib.pyplot as plt
 import os 
 
-
 def load_production_data(fname, name='ws_ref'):
     properties = ["bhp", "qOr", "qWr", "wcut"]
     wells = [0, 1]
