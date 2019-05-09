@@ -3,8 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
+
 def get_activation():
     return nn.ReLU()
+
 
 class GeneratorMultiChannel(nn.Module):
     def __init__(self):
@@ -36,6 +38,7 @@ class GeneratorMultiChannel(nn.Module):
         b = self.activation_facies(x[:, 1]).unsqueeze(1)
         c = self.activation_rho(x[:, 2]).unsqueeze(1)
         return torch.cat([a, b, c], 1)
+
 
 class DiscriminatorUpsampling(nn.Module):
     def __init__(self):

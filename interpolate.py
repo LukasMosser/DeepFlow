@@ -14,6 +14,7 @@ from deepflow.optimizers import MALA, pSGLD, pSGLDmod
 from deepflow.mrst_coupling import PytorchMRSTCoupler, load_production_data, load_gradients
 from deepflow.storage import create_dataset
 from deepflow.utils import set_seed, load_generator, report_latent_vector_stats, print_header
+from deepflow.utils import slerp, get_latent_vector
 from deepflow.losses import compute_prior_loss, compute_prior_loss_kl_divergence, compute_well_loss
 
 import xarray as xr
@@ -35,6 +36,7 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
 
 def parse_args(argv):
     parser = argparse.ArgumentParser()
@@ -60,6 +62,7 @@ def parse_args(argv):
     logger.info('Completed Parsing CMD Line Arguments')
     return args
 
+
 def interpolate(args, zs, generator, output_path):
     z_prior = zs[0].clone()
     
@@ -79,10 +82,8 @@ def interpolate(args, zs, generator, output_path):
 
     matlab_command =  ["matlab", "-nodisplay", "-nosplash", "-nodesktop", "-r"]
     fcall = ['run("'+os.path.join(mrst_path, "startup.m")+'"), run("'+os.path.join(matlab_path, "run_adjoint.m")+'"), exit']
-    fcall_full = ['run("'+os.path.join(mrst_path, "startup.m")+'"), run("'+os.path.join(matlab_path, "run_adjoint_full.m")+'"), exit']
 
     external_commands = {"command": matlab_command, "call": fcall, "matlab_path": matlab_path}
-    external_commands_full = {"command": matlab_command, "call": fcall_full, "matlab_path": matlab_path}
 
     ref_fname = os.path.join(matlab_path, "utils/"+case_name+"/ws_ref.mat")
     syn_fname = os.path.join(matlab_path, "utils/synthetic/ws.mat")
@@ -143,29 +144,6 @@ def interpolate(args, zs, generator, output_path):
 
     return None
 
-def get_latent_vector(file):
-    z = None
-    try:
-        ds = xr.open_dataset(file)
-        z = ds['latent_variables'].values[1].reshape(100)
-        ds.close()
-    except FileNotFoundError:
-        print(folder, " not found")
-    return z
-
-def slerp(val, low, high):
-    """Spherical interpolation. val has a range of 0 to 1.
-        From Tom White 2016
-    """
-    if val <= 0:
-        return low
-    elif val >= 1:
-        return high
-    elif np.allclose(low, high):
-        return low
-    omega = np.arccos(np.dot(low/np.linalg.norm(low), high/np.linalg.norm(high)))
-    so = np.sin(omega)
-    return np.sin((1.0-val)*omega) / so * low + np.sin(val*omega)/so * high
 
 def main(args):
     logger.info('Starting DeepFlow')
@@ -193,6 +171,10 @@ def main(args):
         z1_file = "./results/runs/low_perm/flowwells_adam_bce/min_map/run_9/iteration_243.nc"
         z2_file = "./results/runs/low_perm/flowwells_adam_bce/min_map/run_14/iteration_61.nc"
         z3_file = "./results/runs/low_perm/flowwells_adam_bce/min_map/run_87/iteration_269.nc"
+
+        output_path_1 = os.path.expandvars("./runs/dummy")
+        output_path_2 = os.path.expandvars("./runs/dummy")
+        output_path_3 = os.path.expandvars("./runs/dummy")
     
     z_files = [[z1_file, z2_file], [z2_file, z3_file], [z3_file, z1_file]]
     paths = [output_path_1, output_path_2, output_path_3]
@@ -204,7 +186,8 @@ def main(args):
 
     z_int = [torch.from_numpy(slerp(val, z1, z2)).view(1, 50, 1, 2) for val in vals]
 
-    states = interpolate(args, z_int, generator, paths[args.seed])
+    interpolate(args, z_int, generator, paths[args.seed])
+
 
 if __name__ == '__main__':
     args = parse_args(sys.argv[1:])

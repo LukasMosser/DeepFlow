@@ -15,6 +15,7 @@ import matplotlib
 import matplotlib.colors as colors
 import matplotlib.cm as cmx
 
+
 def update_matplotlib_config():
     # inspired by http://nipunbatra.github.io/2014/08/latexify/
     params = {
@@ -37,9 +38,11 @@ def update_matplotlib_config():
     matplotlib.rcParams.update(params)
     return True
 
+
 def load_gt_model_from_numpy(file):
     gt = np.load(file)
     return gt[0, :, ::-1].T
+
 
 def get_reference_curves(working_dir, perm, case='/reference/reference_noise.nc'):
     ds_ref = xr.open_dataset(working_dir+perm+case)
@@ -48,6 +51,7 @@ def get_reference_curves(working_dir, perm, case='/reference/reference_noise.nc'
     p_ref = ds_ref['state_variables'][dict(state_variable=0, well=0)]/1e5
 
     return [qor_ref, qwr_ref, p_ref]
+
 
 def extract_curves(folder, N=500):
     qor_curves = []
@@ -69,8 +73,10 @@ def extract_curves(folder, N=500):
             pass
     return np.array(qor_curves), np.array(qwr_curves), np.array(p_curves), np.array(perms), np.array(material_grads), np.array(poros)
 
+
 def inverse_permeability_transform(x, a=0.001, b=1e-12):
     return x/b-a
+
 
 def plot_colored_rate_curves(axarr, min_curves, iterations_to_show, ref_curves, dts, method="-Adam", color="blue", alpha=0.1, ref_color="red", cmap="coolwarm"):  
         
@@ -119,7 +125,8 @@ def plot_colored_rate_curves(axarr, min_curves, iterations_to_show, ref_curves, 
     axarr[2].text(800, 2e4, r"Optimization Iteration", rotation=90, fontsize=24)
 
     return True
-    
+
+
 def plot_colored_rate_curves_loss(axarr, min_curves, losses, iterations_to_show, min_iteration, ref_curves, dts, method="-Adam", color="blue", alpha=0.1, ref_color="red", cmap="coolwarm"):  
         
     selected_curves = min_curves[iterations_to_show]
@@ -168,6 +175,7 @@ def plot_colored_rate_curves_loss(axarr, min_curves, losses, iterations_to_show,
 
     return True
 
+
 def plot_rate_curves(axarr, min_curves, ref_curves, dts, method="-Adam", color="blue", alpha=0.05, ref_color="red"):
     for j, curves in enumerate(min_curves):
         if j == len(min_curves)-1:
@@ -214,7 +222,8 @@ def plot_rate_bounds(axarr, min_curves, ref_curves, dts, method="-Adam"):
     axarr[1].set_ylim(-5, 325)
     axarr[2].set_yscale("log")
     axarr[2].set_ylim(150, 20000)
-        
+
+
 def plot_facies(axarr, min_poroperms, envelope=None):
     x = np.where(min_poroperms[:, 1]>1e-13, 1, 0)
     mean = x.mean(axis=0)[::-1]
@@ -235,6 +244,7 @@ def plot_facies(axarr, min_poroperms, envelope=None):
         axarr[0].contour(envelope, colors="r", linewidths=(0.2, ), alpha=0.5)
         axarr[1].contour(envelope, colors="r", linewidths=(0.2, ), alpha=0.5)
 
+
 def plot_row_envelopes(i, properties, curves, ref_curves, dts, envelope=None, desc=""):
     ax1 = plt.subplot2grid((8, 4*2), (i, 0), rowspan=1, colspan=2)
     ax2 = plt.subplot2grid((8, 4*2), (i+1, 0), rowspan=1, colspan=2)
@@ -246,7 +256,8 @@ def plot_row_envelopes(i, properties, curves, ref_curves, dts, envelope=None, de
     ax4 = plt.subplot2grid((8, 4*2), (i, 4), rowspan=2, colspan=2)
     ax5 = plt.subplot2grid((8, 4*2), (i, 6), rowspan=2, colspan=2)
     plot_rate_bounds([ax3, ax4, ax5], curves, ref_curves, dts)
-    
+
+
 def plot_row_curves(i, properties, curves, ref_curves, dts, envelope=None, desc=""):
     ax1 = plt.subplot2grid((8, 4*2), (i, 0), rowspan=1, colspan=2)
     ax2 = plt.subplot2grid((8, 4*2), (i+1, 0), rowspan=1, colspan=2)
@@ -259,11 +270,13 @@ def plot_row_curves(i, properties, curves, ref_curves, dts, envelope=None, desc=
     ax5 = plt.subplot2grid((8, 4*2), (i, 6), rowspan=2, colspan=2)
     plot_rate_curves([ax3, ax4, ax5], curves, ref_curves, dts)
 
+
 def to_deltas(dt):
     dts = [dt[0]]
     for i in range(1, len(dt)):
         dts.append(dts[i-1]+dt[i])
     return np.array(dts)
+
 
 def create_simulation_time_axis():
     dt_1 = to_deltas([1, 1, 3, 5, 5, 10, 10, 10, 15, 15, 15, 15, 15, 15, 15])
@@ -273,9 +286,11 @@ def create_simulation_time_axis():
     dts = np.concatenate([dt_1, dt_2, dt_3, dt_4])
     return dts
 
+
 def extract_min_misfits(misfits, pos):
     mins = np.array([(i, np.argmin(x[:, pos], axis=0), x[np.argmin(x[:, pos], axis=0), pos]) for i, x in enumerate(misfits) if len(x) != 0])
     return mins
+
 
 def load_folders(working_dir, folders, functionals=["min_f", "min_f", "min_f"]):
     temp = []
@@ -290,12 +305,14 @@ def load_folders(working_dir, folders, functionals=["min_f", "min_f", "min_f"]):
         temp_zs.append([min_f_zs])
     return temp, temp_poroperms, temp_zs 
 
+
 def colorbar(mappable):
     ax = mappable.axes
     fig = ax.figure
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
     return fig.colorbar(mappable, cax=cax)
+
 
 def get_unconditionals(working_dir, perm, N=1000):
     curves = []
@@ -321,12 +338,14 @@ def get_unconditionals(working_dir, perm, N=1000):
             print(i)
     return np.array(curves), np.array(poros), np.array(perms), np.array(zs), np.array(misfits)
 
+
 def mean_confidence_interval(data, confidence=0.95):
     a = 1.0 * np.array(data)
     n = data.shape[0]
     m, se = np.mean(a, axis=0), scipy.stats.sem(a, axis=0)
-    h = np.std(a, axis=0)#se * scipy.stats.t.ppf((1 + confidence) / 2., n-1)
+    h = np.std(a, axis=0)
     return m, m-h, m+h
+
 
 def determine_connected(facies, dilation=False):
     if dilation:
@@ -340,6 +359,7 @@ def determine_connected(facies, dilation=False):
         if np.sum(well_a) > 0 and np.sum(well_b) > 0:
             return True
     return False
+
 
 def plot_misfit_histograms(axarr, misfits):
     t_error = pd.DataFrame([m[:, -1] for m in misfits])
@@ -378,5 +398,3 @@ def plot_misfit_histograms(axarr, misfits):
         ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order], fontsize=20)
 
     axarr[0].set_ylabel("Number of Models", fontsize=20)
-    #for ax, label in zip(axarr, ["a)", "b)", "c)"]):
-    #    ax.text(0, 102, label, fontsize=18)

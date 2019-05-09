@@ -1,29 +1,20 @@
 import torch 
 import torch.nn as nn
-from torch.optim.lr_scheduler import ExponentialLR
 from torch.optim import SGD, Adam, RMSprop, Rprop
-import torch.nn.functional as functional
 
 import numpy as np
-from tqdm import tqdm
-from sklearn.metrics import accuracy_score
 
-from deepflow.generator import PermeabilityGeneratorMRST as PermeabilityGenerator
-from deepflow.networks import GeneratorMultiChannel
-from deepflow.optimizers import MALA, pSGLD, pSGLDmod
+from deepflow.optimizers import MALA
 from deepflow.mrst_coupling import PytorchMRSTCoupler, load_production_data, load_gradients
 from deepflow.storage import create_dataset
-from deepflow.utils import set_seed, load_generator, report_latent_vector_stats, print_header
+from deepflow.utils import set_seed, load_generator, print_header
 from deepflow.losses import compute_prior_loss, compute_well_loss, compute_prior_loss_kl_divergence
 
-import time
-import random 
-import gc
 import os 
 import argparse 
 import sys
-import matplotlib.pyplot as plt
 import logging
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -31,6 +22,7 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
 
 def parse_args(argv):
     parser = argparse.ArgumentParser()
@@ -62,6 +54,7 @@ def parse_args(argv):
     args = parser.parse_args(argv)
     logger.info('Completed Parsing CMD Line Arguments')
     return args
+
 
 def optimize(args, z, generator, optimizer, stepper):
     z_prior = z.clone()
@@ -101,12 +94,12 @@ def optimize(args, z, generator, optimizer, stepper):
 
     logger.info('Starting Optimization Loop')
     for i in range(args.iterations):
-        logger.info('Started Iteration %1.2i'%i)
+        logger.info('Started Iteration %1.2i' % i)
         
         logger.info('Reset Latent Variable Gradients')
         optimizer.zero_grad()
 
-        logger.info('Forward Pass GAN Generator Iteration %1.2i'%i)
+        logger.info('Forward Pass GAN Generator Iteration %1.2i' % i)
         k, poro, x = generator(z)
         
         logger.info('Computing Well Loss')
@@ -184,13 +177,14 @@ def optimize(args, z, generator, optimizer, stepper):
 
     return None
 
+
 def main(args):
     logger.info('Starting DeepFlow')
-    logger.info('')
     print_header()
-    logger.info('')
+
     logger.info('Setting Random Seed: %1.2i' % args.seed)
     set_seed(args.seed)
+
     working_dir = os.path.expandvars(args.working_dir)
     checkpoints_path = os.path.join(working_dir, args.checkpoints_dir, "generator_facies_multichannel_4_6790.pth")
 
@@ -214,7 +208,8 @@ def main(args):
         optimizer = MALA(params=[z], lr=args.lr, weight_decay=args.weight_decay, eps3=args.weight_decay)
         stepper = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.999)
     
-    states = optimize(args, z, generator, optimizer, stepper=stepper)
+    optimize(args, z, generator, optimizer, stepper=stepper)
+
 
 if __name__ == '__main__':
     args = parse_args(sys.argv[1:])
