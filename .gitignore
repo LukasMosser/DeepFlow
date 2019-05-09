@@ -1,5 +1,11 @@
 #local directories
 runs/*
+results/misfits/*
+results/runs/*
+results/latent_vectors/*
+results/backup/*
+results/paper/*
+
 mrst/mrst-2018a/examples/data/SPE10/spe_perm.dat
 # Byte-compiled / optimized / DLL files
 __pycache__/
