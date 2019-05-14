@@ -1,6 +1,6 @@
 import torch 
 import torch.nn as nn
-from torch.optim import SGD, Adam, RMSprop, Rprop
+from torch.optim import SGD, Adam, RMSprop
 
 import numpy as np
 
@@ -35,19 +35,19 @@ def parse_args(argv):
     parser.add_argument("--optimizer", type=str, default="sgd", help="Optimization Method")
     parser.add_argument("--lr", type=float, default=1e-1, help="Learning Rate")   
     parser.add_argument("--seed", type=int, default=0, help="Random Seed") 
-    parser.add_argument("--weight_decay", type=float, default=0.1, help="Momentum first parameter") 
+    parser.add_argument("--weight_decay", type=float, default=0.1, help="Weight Decay Parameter")
     parser.add_argument("--beta1", type=float, default=0.9, help="Momentum first parameter") 
     parser.add_argument("--beta2", type=float, default=0.999, help="Momentum second parameter") 
-    parser.add_argument("--iterations", type=int, default=200, help="Number of gradient steps")
+    parser.add_argument("--iterations", type=int, default=500, help="Number of gradient descent steps to perform")
     parser.add_argument("--optimize_wells", action="store_true", help="Match wells")
     parser.add_argument("--optimize_flow", action="store_true", help="Match flow behavior")
     parser.add_argument("--use_prior_loss", action="store_true", help="Regularize latent variables to be Gaussian. Same as weight decay but uses pytorch distributions. Set Weight Decay to 0!")
-    parser.add_argument("--use_kl_loss", action="store_true", help="Regularize latent variables to be Gaussian. Same as weight decay but uses pytorch distributions. Set Weight Decay to 0!")
+    parser.add_argument("--use_kl_loss", action="store_true", help="Regularize latent variables to be Gaussian by minimizing KL-Divergence. Set Weight Decay to 0! (not supported)")
     parser.add_argument("--unconditional", action="store_true", help="Do only one forward pass")
-    parser.add_argument('--well_locations', nargs='+', type=int, default=[8, 120])
-    parser.add_argument("--early_stopping", action="store_true", help="Stop early (only used for well only optimisation)")
+    parser.add_argument('--well_locations', nargs='+', type=int, default=[8, 120], help="Well locations are hardcoded right now.")
+    parser.add_argument("--early_stopping", action="store_true", help="Stop early (not supported)")
     parser.add_argument("--wells_only", action="store_true", help="Optimize wells only.")
-    parser.add_argument("--run_forecast", action="store_true", help="Run a forecast")
+    parser.add_argument("--run_forecast", action="store_true", help="Run a forecast (not supported)")
     parser.add_argument("--target_accuracy", type=float, default=1.0, help="Early stopping criterion for well only optimisation")
     parser.add_argument("--gamma", type=float, default=0.99, help="Learning-Rate Scheduler Gamma") 
     logger.info('Parsing CMD Line Arguments')

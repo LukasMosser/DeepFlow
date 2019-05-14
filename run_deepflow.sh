@@ -1,8 +1,5 @@
-END=1;
-for i in $(seq 0 $END)
-do 
 python run_deepflow.py --working_dir ./ \
---output_dir runs/test_kl_div \
+--output_dir runs/test \
 --matlab_dir mrst/mrst-2018a/modules/optimization/examples/model2Dtest \
 --mrst_dir mrst/mrst-2018a \
 --checkpoints_dir checkpoints \
@@ -16,5 +13,4 @@ python run_deepflow.py --working_dir ./ \
 --use_prior_loss \
 --run_forecast \
 --optimize_flow \
---seed "$i"
-done
+--seed 0

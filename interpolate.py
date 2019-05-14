@@ -1,31 +1,16 @@
-import torch 
-import torch.nn as nn
-from torch.optim.lr_scheduler import ExponentialLR
-from torch.optim import SGD, Adam, RMSprop, Rprop
-import torch.nn.functional as functional
+import torch
 
 import numpy as np
-from tqdm import tqdm
-from sklearn.metrics import accuracy_score
 
-from deepflow.generator import PermeabilityGeneratorMRST as PermeabilityGenerator
-from deepflow.networks import GeneratorMultiChannel
-from deepflow.optimizers import MALA, pSGLD, pSGLDmod
 from deepflow.mrst_coupling import PytorchMRSTCoupler, load_production_data, load_gradients
 from deepflow.storage import create_dataset
-from deepflow.utils import set_seed, load_generator, report_latent_vector_stats, print_header
+from deepflow.utils import set_seed, load_generator, print_header
 from deepflow.utils import slerp, get_latent_vector
 from deepflow.losses import compute_prior_loss, compute_prior_loss_kl_divergence, compute_well_loss
 
-import xarray as xr
-
-import time
-import random 
-import gc
 import os 
 import argparse 
 import sys
-import matplotlib.pyplot as plt
 
 import logging
 
@@ -41,8 +26,6 @@ logger.addHandler(handler)
 def parse_args(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("--working_dir", type=str, default="./", help="Working directory")
-    parser.add_argument("--z_file_1", type=str, default="./", help="Working directory")
-    parser.add_argument("--z_file_2", type=str, default="./", help="Working directory")
     parser.add_argument("--output_dir", type=str, default="output_mrst", help="Output directory")
     parser.add_argument("--matlab_dir", type=str, default="./mrst/mrst-2018a/modules/optimization/examples/model2Dtest/", help="Matlab files directory") 
     parser.add_argument("--mrst_dir", type=str, default="./mrst/mrst-2018a", help="Matlab files directory") 
@@ -51,11 +34,10 @@ def parse_args(argv):
     parser.add_argument("--seed", type=int, default=0, help="Random Seed") 
     parser.add_argument("--iterations", type=int, default=200, help="Number of gradient steps")
     parser.add_argument("--optimize_wells", action="store_true", help="Match wells")
-    parser.add_argument("--optimize_flow", action="store_true", help="Match flow behavior")
-    parser.add_argument("--cluster", action="store_true", help="Run on Cluster")
+    parser.add_argument("--optimize_flow", action="store_true", help="Match flow behaviour")
     parser.add_argument("--use_prior_loss", action="store_true", help="Regularize latent variables to be Gaussian. Same as weight decay but uses pytorch distributions. Set Weight Decay to 0!")
     parser.add_argument("--use_kl_loss", action="store_true", help="Regularize latent variables to be Gaussian using an empirical KL-Divergence")
-    parser.add_argument('--well_locations', nargs='+', type=int, default=[8, 120])
+    parser.add_argument('--well_locations', nargs='+', type=int, default=[8, 120], help="Well locations are hardcoded right now.")
     parser.add_argument("--wells_only", action="store_true", help="Optimize wells only.")
     logger.info('Parsing CMD Line Arguments')
     args = parser.parse_args(argv)
@@ -107,7 +89,6 @@ def interpolate(args, zs, generator, output_path):
         logger.info('Computing Well Loss')
         well_loss, well_acc = compute_well_loss(i, x, x_gt, args.well_locations)
         logger.info('[Well Loss]: %1.3f [Well Accuracy]: %1.2f' % (well_loss.item(), well_acc))
-
         
         logger.info('Computing Gaussian Prior Loss')
         prior_loss_l2 = compute_prior_loss(z, alpha=1.)
@@ -157,24 +138,14 @@ def main(args):
 
     logger.info('Inititalizing GAN Generator')
     generator = load_generator(checkpoints_path)
-    
-    if args.cluster:
-        z1_file = os.path.expandvars("$PBS_O_WORKDIR/deepflow/runs/flowwells_adam_gauss_bce/run_9/iteration_243.nc")
-        z2_file = os.path.expandvars("$PBS_O_WORKDIR/deepflow/runs/flowwells_adam_gauss_bce/run_14/iteration_61.nc")
-        z3_file = os.path.expandvars("$PBS_O_WORKDIR/deepflow/runs/flowwells_adam_gauss_bce/run_87/iteration_269.nc")
 
-        output_path_1 = os.path.expandvars("$PBS_O_WORKDIR/deepflow/runs/interpolations/interpolation_9_14")
-        output_path_2 = os.path.expandvars("$PBS_O_WORKDIR/deepflow/runs/interpolations/interpolation_14_87")
-        output_path_3 = os.path.expandvars("$PBS_O_WORKDIR/deepflow/runs/interpolations/interpolation_87_9")
+    z1_file = "./results/interpolations/run_1/iteration_233.nc"
+    z2_file = "./results/interpolations/run_4/iteration_253.nc"
+    z3_file = "./results/interpolations/run_5/iteration_475.nc"
 
-    else:
-        z1_file = "./results/runs/low_perm/flowwells_adam_bce/min_map/run_9/iteration_243.nc"
-        z2_file = "./results/runs/low_perm/flowwells_adam_bce/min_map/run_14/iteration_61.nc"
-        z3_file = "./results/runs/low_perm/flowwells_adam_bce/min_map/run_87/iteration_269.nc"
-
-        output_path_1 = os.path.expandvars("./runs/dummy")
-        output_path_2 = os.path.expandvars("./runs/dummy")
-        output_path_3 = os.path.expandvars("./runs/dummy")
+    output_path_1 = os.path.expandvars("./results/interpolations/interpolation_1_4")
+    output_path_2 = os.path.expandvars("./results/interpolations/interpolation_4_5")
+    output_path_3 = os.path.expandvars("./results/interpolations/interpolation_5_1")
     
     z_files = [[z1_file, z2_file], [z2_file, z3_file], [z3_file, z1_file]]
     paths = [output_path_1, output_path_2, output_path_3]
