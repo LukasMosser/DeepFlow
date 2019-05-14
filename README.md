@@ -1,39 +1,62 @@
 # DeepFlow
-## History Matching in the Space of Deep Generative Models
+### History Matching in the Space of Deep Generative Models
 
 Authors: [Lukas Mosser](https://twitter.com/porestar), [Olivier Dubrule](emailto:o.dubrule@imperial.ac.uk), [Martin J. Blunt]((emailto:m.blunt@imperial.ac.uk))  
 
 [Pytorch](https://pytorch.org) implementation of [DeepFlow: History Matching in the Space of Deep Generative Models]()
 
-### Model Architecture
+## Model Architecture
 <img src="https://github.com/LukasMosser/DeepFlow/results/figures/overview.png" width="400">
 
 The model architecture consists of two parts: the generative adversarial network (implemented in Pytorch) and the forward solver ([MRST](https://www.sintef.no/projectweb/mrst/)).
 The coupling between the two is implemented in ```deepflow.mrst_coupling.PytorchMRSTCoupler``` and defines a fully differentiable computational graph.
 
-### Example Inversion
+## Traversing the latent space while "History Matching"
 
-<img src="https://github.com/LukasMosser/DeepFlow/results/figures/evolution_facies.gif" width="300">
+<img src="https://github.com/LukasMosser/DeepFlow/results/animations/evolution_facies.gif" width="300">
 
 A visualization of the intermediate geological models obtained during the optimisation process.
 
-### Usage
+## Interpolation between MAP solutions
+
+<img src="https://github.com/LukasMosser/DeepFlow/results/animations/interpolated_1_4_5_1.gif" width="300">
+
+Interpolation in latent space between three MAP estimates shown in the publication (Figure 9a-b)
+
+## Usage
 
 To perform the inversion using the available pre-trained generator network use ``` run_deepflow.sh ```  
-This requires a current version of Matlab or Octave available on the PATH.
+This requires a current version of Matlab or Octave available on the PATH.  
+Interpolation is performed by running ```interpolation.py``` using the example bash file ```run_deepflow_interpolation.sh```.
 
-### Trained Models
+## Trained Models
 Pre-trained models are available in the  [checkpoints](checkpoints/) directory.
 
-### Matlab / Octave Compatibility
+## Results and Data
+
+A subset of the results is available in this [Google Drive]()  
+The full dataset of the computations is multiple terrabyte in size and cannot be shared.  
+Computing each run was made reproducible by setting the run-number = seed command-line argumen.  
+Computations were performed on Imperial College CX1 supercomputing facilities.
+Total duration: 3 days wall-time on 100 servers @ 4-cores each.  
+
+## Matlab / Octave Compatibility
 The reservoir simulator that solves the two-phase flow problem and provides gradients via the adjoint [MRST](https://www.sintef.no/projectweb/mrst/)
 requires a Matlab license to run, but should be fully compatbile with [GNU Octave](https://www.gnu.org/software/octave/)
-### Acknowledgments
 
-The author would like to acknolwedge the developers of the [Matlab Reservoir Simulator Toolbox](https://www.sintef.no/projectweb/mrst/).
+## Citing
+
+```
+
+```
+
+## Acknowledgments
+
+The author would like to acknolwedge the developers of the [Matlab Reservoir Simulator Toolbox](https://www.sintef.no/projectweb/mrst/).  
 If you use their software, please acknowledge them in your references.
+O. Dubrule would like to thank Total for seconding him as a visiting professor at Imperial College London.
 
-### License
+## License
 
 [MIT](LICENSE)
 
