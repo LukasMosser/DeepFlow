@@ -3,7 +3,7 @@
 
 Authors: [Lukas Mosser](https://twitter.com/porestar), [Olivier Dubrule](https://www.imperial.ac.uk/people/o.dubrule), [Martin J. Blunt](https://www.imperial.ac.uk/people/m.blunt) 
 
-[Pytorch](https://pytorch.org) implementation of [DeepFlow: History Matching in the Space of Deep Generative Models]()
+[Pytorch](https://pytorch.org) implementation of [DeepFlow: History Matching in the Space of Deep Generative Models](https://arxiv.org/abs/1905.05749)
 
 ## Model Architecture
 <img src="https://github.com/LukasMosser/DeepFlow/raw/master/results/figures/overview.png" width="800">
