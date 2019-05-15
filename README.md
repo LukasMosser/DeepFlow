@@ -13,13 +13,13 @@ The coupling between the two is implemented in ```deepflow.mrst_coupling.Pytorch
 
 ## Traversing the latent space while "History Matching"
 
-<img src="https://github.com/LukasMosser/DeepFlow/raw/master/results/animations/evolution_facies.gif" width="300">
+<img src="https://github.com/LukasMosser/DeepFlow/raw/master/results/animations/evolution_facies.gif" width="400">
 
 A visualization of the intermediate geological models obtained during the optimisation process.
 
 ## Interpolation between MAP solutions
 
-<img src="https://github.com/LukasMosser/DeepFlow/raw/master/results/animations/interpolated_1_4_5_1.gif" width="300">
+<img src="https://github.com/LukasMosser/DeepFlow/raw/master/results/animations/interpolated_1_4_5_1.gif" width="400">
 
 Interpolation in latent space between three MAP estimates shown in the publication (Figure 9a-b)
 
