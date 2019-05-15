@@ -47,7 +47,21 @@ requires a Matlab license to run, but should be fully compatbile with [GNU Octav
 ## Citing
 
 ```
-
+@ARTICLE{2019arXiv190505749M,
+       author = {{Mosser}, Lukas and {Dubrule}, Olivier and {Blunt}, Martin J.},
+        title = "{DeepFlow: History Matching in the Space of Deep Generative Models}",
+      journal = {arXiv e-prints},
+     keywords = {Computer Science - Machine Learning, Computer Science - Computer Vision and Pattern Recognition, Physics - Computational Physics, Physics - Geophysics, Statistics - Machine Learning},
+         year = "2019",
+        month = "May",
+          eid = {arXiv:1905.05749},
+        pages = {arXiv:1905.05749},
+        archivePrefix = {arXiv},
+       eprint = {1905.05749},
+        primaryClass = {cs.LG},
+       adsurl = {https://ui.adsabs.harvard.edu/abs/2019arXiv190505749M},
+      adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+}
 ```
 
 ## Acknowledgements
