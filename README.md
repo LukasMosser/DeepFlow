@@ -6,7 +6,7 @@ Authors: [Lukas Mosser](https://twitter.com/porestar), [Olivier Dubrule](https:/
 [Pytorch](https://pytorch.org) implementation of [DeepFlow: History Matching in the Space of Deep Generative Models]()
 
 ## Model Architecture
-<img src="https://github.com/LukasMosser/DeepFlow/raw/master/results/figures/overview.png" width="400">
+<img src="https://github.com/LukasMosser/DeepFlow/raw/master/results/figures/overview.png" width="800">
 
 The model architecture consists of two parts: the generative adversarial network (implemented in Pytorch) and the forward solver ([MRST](https://www.sintef.no/projectweb/mrst/)).
 The coupling between the two is implemented in ```deepflow.mrst_coupling.PytorchMRSTCoupler``` and defines a fully differentiable computational graph.
