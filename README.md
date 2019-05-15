@@ -6,20 +6,20 @@ Authors: [Lukas Mosser](https://twitter.com/porestar), [Olivier Dubrule](https:/
 [Pytorch](https://pytorch.org) implementation of [DeepFlow: History Matching in the Space of Deep Generative Models]()
 
 ## Model Architecture
-<img src="https://github.com/LukasMosser/DeepFlow/results/figures/overview.png" width="400">
+<img src="https://github.com/LukasMosser/DeepFlow/raw/master/results/figures/overview.png" width="400">
 
 The model architecture consists of two parts: the generative adversarial network (implemented in Pytorch) and the forward solver ([MRST](https://www.sintef.no/projectweb/mrst/)).
 The coupling between the two is implemented in ```deepflow.mrst_coupling.PytorchMRSTCoupler``` and defines a fully differentiable computational graph.
 
 ## Traversing the latent space while "History Matching"
 
-<img src="https://github.com/LukasMosser/DeepFlow/results/animations/evolution_facies.gif" width="300">
+<img src="https://github.com/LukasMosser/DeepFlow/raw/master/results/animations/evolution_facies.gif" width="300">
 
 A visualization of the intermediate geological models obtained during the optimisation process.
 
 ## Interpolation between MAP solutions
 
-<img src="https://github.com/LukasMosser/DeepFlow/results/animations/interpolated_1_4_5_1.gif" width="300">
+<img src="https://github.com/LukasMosser/DeepFlow/raw/master/results/animations/interpolated_1_4_5_1.gif" width="300">
 
 Interpolation in latent space between three MAP estimates shown in the publication (Figure 9a-b)
 
