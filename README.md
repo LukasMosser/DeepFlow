@@ -53,7 +53,7 @@ requires a Matlab license to run, but should be fully compatbile with [GNU Octav
 ## Acknowledgements
 
 The author would like to acknolwedge the developers of the [Matlab Reservoir Simulator Toolbox](https://www.sintef.no/projectweb/mrst/).  
-If you use their software, please acknowledge them in your references.
+If you use their software, please acknowledge them in your references.  
 O. Dubrule would like to thank Total for seconding him as a visiting professor at Imperial College London.
 
 ## License
