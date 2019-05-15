@@ -1,7 +1,7 @@
 # DeepFlow
 ### History Matching in the Space of Deep Generative Models
 
-Authors: [Lukas Mosser](https://twitter.com/porestar), [Olivier Dubrule](emailto:o.dubrule@imperial.ac.uk), [Martin J. Blunt]((emailto:m.blunt@imperial.ac.uk))  
+Authors: [Lukas Mosser](https://twitter.com/porestar), [Olivier Dubrule](https://www.imperial.ac.uk/people/o.dubrule), [Martin J. Blunt]((https://www.imperial.ac.uk/people/m.blunt))  
 
 [Pytorch](https://pytorch.org) implementation of [DeepFlow: History Matching in the Space of Deep Generative Models]()
 
