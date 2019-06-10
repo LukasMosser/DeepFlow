@@ -104,7 +104,7 @@ def plot_colored_rate_curves(axarr, min_curves, iterations_to_show, ref_curves, 
     for k in range(3):
         axarr[k].plot(dts, min_curves[iterations_to_show[-1]][k], color='black', alpha=1.0, linewidth=4, linestyle="--", label=r"Minimum $\mathcal{L}(\mathbf{z})$")  
                 
-    for i, t, loc  in zip(range(3), ["Oil Rate [m3/d]", "Water Rate [m3/d]", "Pressure [Bar]"], [0, 1, 1]):
+    for i, t, loc  in zip(range(3), ["Water Rate [m3/d]", "Oil Rate [m3/d]", "Pressure [Bar]"], [0, 1, 1]):
         axarr[i].scatter(dts, ref_curves[i], color=ref_color, marker="x", s=100, label="Observed", zorder=100)
         axarr[i].set_ylabel(t, fontsize=16)
         axarr[i].legend(fontsize=20, loc=loc)
@@ -153,7 +153,7 @@ def plot_colored_rate_curves_loss(axarr, min_curves, losses, iterations_to_show,
     for k in range(3):
         axarr[k].plot(dts, min_curves[min_iteration, k, :][0], color='black', alpha=1.0, linewidth=4, linestyle="--", label=r"Minimum $\mathcal{L}(\mathbf{z})$")  
                 
-    for i, t, loc  in zip(range(3), ["Oil Rate [m3/d]", "Water Rate [m3/d]", "Pressure [Bar]"], [0, 1, 1]):
+    for i, t, loc  in zip(range(3), ["Water Rate [m3/d]", "Oil Rate [m3/d]", "Pressure [Bar]"], [0, 1, 1]):
         axarr[i].scatter(dts, ref_curves[i], color=ref_color, marker="x", s=60, label="Observed", zorder=100)
         axarr[i].set_ylabel(t, fontsize=16)
         axarr[i].legend(fontsize=20, loc=loc)
@@ -196,7 +196,7 @@ def plot_rate_curves(axarr, min_curves, ref_curves, dts, method="-Adam", color="
     axarr[2].set_yscale("log")
     axarr[2].set_ylim(150, 20000)
 
-    for i, t, s  in zip(range(3), ["Oil Rate [m3/d]", "Water Rate [m3/d]", "Pressure [Bar]"], [8, 8, 20]):
+    for i, t, s in zip(range(3), ["Water Rate [m3/d]", "Oil Rate [m3/d]", "Pressure [Bar]"], [8, 8, 20]):
         axarr[i].scatter(dts, ref_curves[i], color=ref_color, label="Observed", marker="x", s=s, alpha=1.0)
         axarr[i].set_ylabel(t)
         axarr[i].legend()
@@ -205,7 +205,7 @@ def plot_rate_curves(axarr, min_curves, ref_curves, dts, method="-Adam", color="
 def plot_rate_bounds(axarr, min_curves, ref_curves, dts, method="-Adam"):
     mean_curves, lower, upper = mean_confidence_interval(min_curves)
     
-    for i, t, s  in zip(range(3), ["Oil Rate [m3/d]", "Water Rate [m3/d]", "Pressure [Bar]"], [8, 8, 20]):
+    for i, t, s  in zip(range(3), ["Water Rate [m3/d]", "Oil Rate [m3/d]", "Pressure [Bar]"], [8, 8, 20]):
         axarr[i].plot(dts, mean_curves[i], color="black", linestyle="-", label="Avg. Simulated")
         axarr[i].plot(dts, upper[i], color="black", linestyle="--")
         axarr[i].plot(dts, lower[i], color="black", linestyle="--")
