@@ -205,8 +205,8 @@ def main(args):
         optimizer = Adam([z], lr=args.lr, betas=(args.beta1, args.beta2), weight_decay=args.weight_decay)
     elif args.optimizer == "mala":
         # Not supported
-        optimizer = MALA(params=[z], lr=args.lr, weight_decay=args.weight_decay, eps3=args.weight_decay)
-        stepper = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.999)
+        optimizer = MALA(params=[z], lr=args.lr)
+        stepper = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.995)
     
     optimize(args, z, generator, optimizer, stepper=stepper)
 
